@@ -13,7 +13,7 @@ train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=Tru
 test_set = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=64, shuffle=False, num_workers=0)
 
-classes = ('1', '2', '3', '4', '5', '6', '7', '8', '9')
+classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
 
 
 class Net(torch.nn.Module):
