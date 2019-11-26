@@ -7,6 +7,7 @@ class App:
     def __init__(self, master):
 
         self.init_ui(master)
+        self.init_bind()
         self.outline = None
 
     def init_ui(self, master):
@@ -31,11 +32,11 @@ class App:
         self.draw_frame.focus_set()
         print("clicked at", event.x, event.y)
 
-
+    def init_bind(self):
+        self.draw_frame.bind("<Button-1>", self.mouse_click)
 
 
 root = tk.Tk()
 app = App(root)
-app.draw_frame.bind("<Button-1>", app.mouse_click)
 root.mainloop()
 
