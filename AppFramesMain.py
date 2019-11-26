@@ -12,6 +12,7 @@ class App:
         self.outline = None
         self.ink_matrix = np.zeros((28, 28))
         self.draw_canvas = None
+        self.value_disp = None
 
     def init_ui(self, master):
 
@@ -70,10 +71,11 @@ class App:
         probs = Main.use_net(self.ink_matrix)
         print(probs)
         value = np.argmax(probs)
-
-        value_disp = tk.Text(self.num_output, height=1, width=1)
-        value_disp.pack()
-        value_disp.insert(tk.END, value)
+        if self.value_disp is not None:
+            self.value_disp.destroy
+        self.value_disp = tk.Text(self.num_output, height=1, width=1)
+        self.value_disp.pack()
+        self.value_disp.insert(tk.END, value)
 
 
 root = tk.Tk()
