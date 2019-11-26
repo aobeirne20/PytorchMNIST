@@ -1,10 +1,12 @@
 import torch
 import torchvision
 import torchvision.transforms as transforms
+from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import numpy as np
+from time import time
 
-
+device = torch.device('cuda')
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 
 train_set = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
@@ -31,16 +33,20 @@ class Net(torch.nn.Module):
 
 
 net = Net()
-print(net)
-
+net = net.cuda()
 
 optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 criterion = torch.nn.NLLLoss()
 
-for epoch in range(epochs):
+n_epochs = 5
+log_interval = 1
+
+start_time = time()
+for epoch in range(n_epochs):
     for batch_idx, (data, target) in enumerate(train_loader):
+        data = data.cuda()
+        target = target.cuda()
         data, target = Variable(data), Variable(target)
-        # resize data from (batch_size, 1, 28, 28) to (batch_size, 28*28)
         data = data.view(-1, 28*28)
         optimizer.zero_grad()
         net_out = net(data)
@@ -48,9 +54,13 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
         if batch_idx % log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(data), len(train_loader.dataset),
-                           100. * batch_idx / len(train_loader), loss.data[0]))
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data),
+                                                                           len(train_loader.dataset),
+                                                                           100. * batch_idx / len(train_loader),
+                                                                           loss.data.item()))
+end_time = time()
+print(end_time-start_time)
+
 
 
 
