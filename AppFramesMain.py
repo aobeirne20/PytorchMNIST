@@ -28,13 +28,14 @@ class App:
         buttons_frame.grid(row=2, column=1, padx=(0, 50), pady=(0, 50))
 
     def mouse_click(self):
+        self.draw_frame.focus_set()
         print("clicked at", tk.event.x, tk.event.y)
 
-    def on_execute(self):
-        self.draw_frame.bind("<Button-1>", self.mouse_click)
+
 
 
 root = tk.Tk()
 app = App(root)
 root.mainloop()
+root.draw_frame.bind("<Button-1>", root.mouse_click)
 root.on_execute()
