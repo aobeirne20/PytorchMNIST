@@ -72,7 +72,7 @@ class App:
         print(probs)
         value = np.argmax(probs)
         if self.value_disp is not None:
-            self.value_disp.destroy
+            self.value_disp.pack_forget()
         self.value_disp = tk.Text(self.num_output, height=1, width=1)
         self.value_disp.pack()
         self.value_disp.insert(tk.END, value)
