@@ -115,22 +115,20 @@ class NetWrapper:
         if torch.cuda.is_available():
             self.net.to('cuda:0')
 
-    def recorded_learn(self):
-        #for 20 epochs, will check final error rate on different momentums and learning rates
-        error_matrix = np.zeros((6, 5))
-        for mdx, momentum in enumerate([0.1, 0.3, 0.5, 0.7, 0.9]):
-            for lrx, learning_rate in enumerate([0.001, 0.002, 0.004, 0.006, 0.008, 0.01]):
-                self.reset()
-                self.learn(MNIST_data.train_load, 60, learning_rate, momentum, 20)
-                error = self.test(MNIST_data.test_load)
-                error_matrix[lrx, mdx] = error
-                print(f'With momentum {momentum} and learning rate{learning_rate}, at 20 epochs, error was {error}')
+    def recorded_learn(self, data):
+        error_matrix = np.zeros((3, 6, 5))
+        for epx, epochs in enumerate([20, 25, 30]):
+            for mdx, momentum in enumerate([0.1, 0.3, 0.5, 0.7, 0.9]):
+                for lrx, learning_rate in enumerate([0.001, 0.002, 0.004, 0.006, 0.008, 0.01]):
+                    error = 0
+                    for erx, era in enumerate([1, 2, 3]):
+                        self.reset()
+                        self.learn(data.train_load, 60, learning_rate, momentum, epochs)
+                        error = self.test(data.test_load) + error
+                    error = round((error / 3), 2)
+                    error_matrix[epx, lrx, mdx] = error
+                    print(f'momentum: {momentum} learning rate: {learning_rate}, at {epochs} epochs, 3-avg error was {error:.2f}')
         print(error_matrix)
-
-
-MNIST_data = MNISTData()
-MNIST_net = NetWrapper()
-MNIST_net.recorded_learn()
 
 
 
