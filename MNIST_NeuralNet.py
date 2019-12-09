@@ -94,9 +94,11 @@ class NetWrapper:
 
     def use(self, image_matrix, transform):
         tensor_input = transform(image_matrix).float()
+        if torch.cuda.is_available():
+            tensor_input = tensor_input.to('cuda:0')
         tensor_input = tensor_input.view(-1, 28 * 28)
         prob_matrix = self.net.forward(tensor_input)
-        return prob_matrix.detach().numpy()
+        return prob_matrix.detach().cpu().numpy()
 
     def save(self, filename):
         path = f'./neural_net/{filename}.pth'
@@ -131,6 +133,11 @@ class NetWrapper:
         print(error_matrix)
 
 
+#MNIST = MNISTData()
+#NN = NetWrapper()
+#NN.learn(MNIST.train_load, 60, 0.01, 0.9, 30)
+#NN.test(MNIST.test_load)
+#NN.save('Era2')
 
 
 
