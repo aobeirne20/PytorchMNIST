@@ -1,7 +1,7 @@
 import numpy as np
 import tkinter as tk
 from PIL import Image, ImageTk, ImageGrab
-from MNIST_NeuralNet import NetWrapper, MNISTData
+from MNIST_NeuralNet import NetWrapper, MNISTData, Net
 
 
 class App:
@@ -34,17 +34,20 @@ class App:
         user_canvas.grid(column=0, rowspan=3, padx=50, pady=50)
         nn_frame.grid(row=0, column=1, padx=(0, 50), pady=(50, 0))
         data_frame.grid(row=1, column=1, padx=(0, 50), pady=(0, 90))
+        data_frame.grid_propagate(0)
         buttons_frame.grid(row=2, column=1, padx=(0, 50), pady=(0, 50), sticky=tk.W)
 
         input_bg = tk.PhotoImage(file='BlankOutput.pgm')
-        input_box = tk.Label(nn_frame, bg='#000000', width=110, height=110, image=input_bg)
+        input_box = tk.Label(nn_frame, bg='#000000', width=110, height=110, image=input_bg, bd=0)
         input_box.photo = input_bg
-        output_box = tk.Frame(nn_frame, bg='#000000', width=110, height=110)
+        output_box = tk.Label(nn_frame, bg='#000000', width=110, height=110, image=input_bg, bd=0)
+        output_box.photo = input_bg
+        output_box.grid_propagate(0)
 
         input_box.grid(row=0, column=0, padx=(20, 45), pady=20)
         output_box.grid(row=0, column=1, padx=(45, 20), pady=20)
 
-        run_button = tk.Button(buttons_frame, text='RUN', command=lambda: self.run_nn(user_canvas, input_box), bg='#3C3C3C', fg='#BDBDBD')
+        run_button = tk.Button(buttons_frame, text='RUN', command=lambda: self.run_nn(user_canvas, input_box, output_box, data_frame), bg='#3C3C3C', fg='#BDBDBD')
         run_button.pack(side=tk.LEFT, padx=(0, 10))
 
         clear_button = tk.Button(buttons_frame, text='CLEAR', command=lambda: user_canvas.clear_canvas(input_box), bg='#3C3C3C', fg='#BDBDBD')
@@ -56,7 +59,7 @@ class App:
         user_canvas.bind("<B1-Motion>", user_canvas.draw_event)
         user_canvas.bind("<Button-1>", user_canvas.draw_event)
 
-    def run_nn(self, user_canvas, input_box):
+    def run_nn(self, user_canvas, input_box, output_box, data_frame):
         input_array = Image.fromarray(np.array(user_canvas.ink_matrix.astype('uint8')))
         input_28 = input_array.resize((28, 28), resample=Image.LANCZOS)
         nn_input = np.array(input_28)
@@ -66,10 +69,19 @@ class App:
         input_box.config(image=input_image)
         input_box.photo = input_image
 
-        prob_matrix = (np.array((self.NN.use(nn_input, self.MNIST.transform))))
+        prob_matrix = np.exp(np.array((self.NN.use(nn_input, self.MNIST.transform))))
         np.set_printoptions(precision=2, suppress=True)
-        print(prob_matrix)
-        print(np.argmax(prob_matrix))
+
+        output_text = tk.Label(output_box, bg='#000000', bd=0, text=f" {np.argmax(prob_matrix)}", fg="white", font=("",75))
+        output_text.grid(row=0, column=0)
+
+        prob_list = []
+        for n in list((0, 1, 2, 3, 4, 5, 6, 7, 8, 9)):
+            prob_list.append(tk.Label(data_frame, bg='#1F1F1F', fg="white", text=f"{n}: {prob_matrix[0, n]*100:.4f}%"))
+            prob_list[n].grid(row=n % 5, column=n // 5)
+
+
+
 
 class DrawingCanvas(tk.Canvas):
 
@@ -88,10 +100,6 @@ class DrawingCanvas(tk.Canvas):
         self.ink_matrix = np.zeros((400, 400))
         self.img = tk.PhotoImage(file="BlankCanvas.pgm")
         self.create_image((200, 200), image=self.img, state="normal")
-
-        input_bg = tk.PhotoImage(file='BlankOutput.pgm')
-        input_box.config(image=input_bg)
-        input_box.photo = input_bg
 
     def gaussian_pen(self, center_x, center_y):
         for x in range(0, 20):
