@@ -74,6 +74,24 @@ class NetWrapper:
                 print(f'   {(time.time() - s_time):.2f}s  Avg Loss: {(loss_total / (leng/batc_s)):.4f}')
         return loss_total / (leng/batc_s)
 
+    def user_learn(self, input_array, label):
+        print("Running user-defined single input learning process.")
+        optimizer = torch.optim.SGD(self.net.parameters(), 0.01, 0.7)
+        criterion = torch.nn.NLLLoss()
+        data, target = torch.autograd.Variable((torch.tensor(input_array)).float()), torch.autograd.Variable((torch.tensor(label)))
+        data = data.view(-1, 28 * 28)
+        optimizer.zero_grad()
+        if torch.cuda.is_available():
+            net_out = self.net(data.to('cuda:0'))
+            loss = criterion(net_out, target.to('cuda:0').unsqueeze(0))
+        else:
+            net_out = self.net(data)
+            loss = criterion(net_out, target.unaqueeze(0))
+        loss.backward()
+        optimizer.step()
+        print(f"Successfully ran user-defined single learn for {label}")
+
+
     def test(self, test_loaded):
         n_correct = 0
         n_incorrect = 0
@@ -103,6 +121,7 @@ class NetWrapper:
     def save(self, filename):
         path = f'./neural_net/{filename}.pth'
         torch.save(self.net, path)
+        print(f"File saved at {path}")
 
     def load(self, filename):
         path = f'./neural_net/{filename}.pth'

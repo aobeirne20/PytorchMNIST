@@ -15,6 +15,7 @@ class App:
         self.NN = NetWrapper()
         self.NN.load('Era2')
         self.NN.net.eval()
+        self.input_28 = None
 
         master.mainloop()
 
@@ -36,6 +37,7 @@ class App:
         data_frame.grid(row=1, column=1, padx=(0, 50), pady=(0, 90))
         data_frame.grid_propagate(0)
         buttons_frame.grid(row=2, column=1, padx=(0, 50), pady=(0, 50), sticky=tk.W)
+        buttons_frame.grid_propagate(0)
 
         input_bg = tk.PhotoImage(file='BlankOutput.pgm')
         input_box = tk.Label(nn_frame, bg='#000000', width=110, height=110, image=input_bg, bd=0)
@@ -47,23 +49,44 @@ class App:
         input_box.grid(row=0, column=0, padx=(20, 45), pady=20)
         output_box.grid(row=0, column=1, padx=(45, 20), pady=20)
 
-        run_button = tk.Button(buttons_frame, text='RUN', command=lambda: self.run_nn(user_canvas, input_box, output_box, data_frame), bg='#3C3C3C', fg='#BDBDBD')
+        prob_frame_list = []
+        prob_text_list = []
+        for n in list((0, 1, 2, 3, 4, 5, 6, 7, 8, 9)):
+            prob_frame_list.append(tk.Frame(data_frame, bg='#1F1F1F', width=80, height=24))
+            prob_frame_list[n].grid(row=n % 5, column=n // 5, padx=(20,20))
+            prob_frame_list[n].grid_propagate(0)
+            prob_text_list.append(tk.Label(prob_frame_list[n], text="", fg="white", bg='#1F1F1F'))
+            prob_text_list[n].grid(row=0, column=0)
+            
+        run_button = tk.Button(buttons_frame, text='RUN', command=lambda: self.run_nn(user_canvas, input_box, output_box, prob_text_list), bg='#3C3C3C', fg='#BDBDBD')
         run_button.pack(side=tk.LEFT, padx=(0, 10))
 
         clear_button = tk.Button(buttons_frame, text='CLEAR', command=lambda: user_canvas.clear_canvas(input_box), bg='#3C3C3C', fg='#BDBDBD')
-        clear_button.pack(side=tk.LEFT, padx=(10, 200))
+        clear_button.pack(side=tk.LEFT, padx=(10, 50))
+
+        save_button = tk.Button(buttons_frame, text='SAVE', command=lambda: self.save_nn(), bg='#3C3C3C', fg='#BDBDBD')
+        save_button.pack(side=tk.LEFT, padx=(10, 10))
+
+        learn_button = tk.Button(buttons_frame, text='LEARN', command=lambda: self.learn_nn(learn_field), bg='#3C3C3C', fg='#BDBDBD')
+        learn_button.pack(side=tk.LEFT, padx=(10, 10))
+
+        learn_field = tk.Entry(buttons_frame, width=10)
+        learn_field.pack(side=tk.LEFT, padx=(10, 10))
 
         self.init_bind(user_canvas)
+
+    def save_nn(self):
+        self.NN.save("Era3")
 
     def init_bind(self, user_canvas):
         user_canvas.bind("<B1-Motion>", user_canvas.draw_event)
         user_canvas.bind("<Button-1>", user_canvas.draw_event)
 
-    def run_nn(self, user_canvas, input_box, output_box, data_frame):
+    def run_nn(self, user_canvas, input_box, output_box, prob_text_list):
         input_array = Image.fromarray(np.array(user_canvas.ink_matrix.astype('uint8')))
-        input_28 = input_array.resize((28, 28), resample=Image.LANCZOS)
-        nn_input = np.array(input_28)
-        input_110 = input_28.resize((110, 110))
+        self.input_28 = input_array.resize((28, 28), resample=Image.LANCZOS)
+        nn_input = np.array(self.input_28)
+        input_110 = self.input_28.resize((110, 110))
 
         input_image = ImageTk.PhotoImage(input_110)
         input_box.config(image=input_image)
@@ -75,12 +98,16 @@ class App:
         output_text = tk.Label(output_box, bg='#000000', bd=0, text=f" {np.argmax(prob_matrix)}", fg="white", font=("",75))
         output_text.grid(row=0, column=0)
 
-        prob_list = []
         for n in list((0, 1, 2, 3, 4, 5, 6, 7, 8, 9)):
-            prob_list.append(tk.Label(data_frame, bg='#1F1F1F', fg="white", text=f"{n}: {prob_matrix[0, n]*100:.4f}%"))
-            prob_list[n].grid(row=n % 5, column=n // 5)
+            prob_text_list[n].configure(text=f"{n} : {prob_matrix[0, n]*100:.6f}")
+            prob_text_list[n].grid(row=0, column=0)
 
-
+    def learn_nn(self, learn_field):
+        learn_input = int(learn_field.get())
+        if (learn_input > 9) or (learn_input < 0):
+            print("Invalid entry")
+            pass
+        self.NN.user_learn(np.array(self.input_28), learn_input)
 
 
 class DrawingCanvas(tk.Canvas):
