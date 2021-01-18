@@ -26,10 +26,10 @@ class MNISTData:
         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 
         train_set = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=self.transform)
-        self.train_load = torch.utils.data.DataLoader(train_set, batch_size=60, shuffle=True, num_workers=0)
+        self.train_load = torch.utils.data.DataLoader(train_set, batch_size=60, shuffle=True, num_workers=4, pin_memory=True)
 
         test_set = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=self.transform)
-        self.test_load = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=0)
+        self.test_load = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=4, pin_memory=True)
 
 
 class NetWrapper:
@@ -152,11 +152,16 @@ class NetWrapper:
         print(error_matrix)
 
 
-#MNIST = MNISTData()
-#NN = NetWrapper()
-#NN.learn(MNIST.train_load, 60, 0.01, 0.9, 30)
-#NN.test(MNIST.test_load)
-#NN.save('Era2')
+
+
+
+if __name__ == '__main__':
+    MNIST = MNISTData()
+    NN = NetWrapper()
+    NN.learn(MNIST.train_load, 60, 0.01, 0.9, 30)
+    NN.test(MNIST.test_load)
+    NN.save('Era2')
+
 
 
 
